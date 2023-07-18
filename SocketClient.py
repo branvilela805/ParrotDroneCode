@@ -1,23 +1,28 @@
 import socket
 
+def getData(cs):
+    cs.send("get data".encode())
+    data = cs.recv(1024).decode()  # receive response
+    print('Received from server: ' + data)  # show in terminal
+    
 
 def client_program():
     # host = socket.gethostname()  # as both code is running on same pc
     host = "10.247.5.44"
-    port = 5123  # socket server port number
+    port = 9123  # socket server port number
 
     client_socket = socket.socket()  # instantiate
     client_socket.connect((host, port))  # connect to the server
 
-    message = input(" -> ")  # take input
+    # message = input(" -> ")  # take input
 
-    while message.lower().strip() != 'bye':
-        client_socket.send(message.encode())  # send message
-        data = client_socket.recv(1024).decode()  # receive response
+    while True:
+        message = input()
+        # client_socket.send(message.encode())  # send message
+        if message == "y":
+            getData(client_socket)
 
-        print('Received from server: ' + data)  # show in terminal
-
-        message = input(" -> ")  # again take input
+        # message = input(" -> ")  # again take input
 
     client_socket.close()  # close the connection
 

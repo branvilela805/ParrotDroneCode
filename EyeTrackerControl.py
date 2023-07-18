@@ -9,47 +9,55 @@ from olympe.messages.ardrone3.Piloting import TakeOff, Landing, PCMD
 from pynput.keyboard import Listener, Key, KeyCode
 from collections import defaultdict
 from enum import Enum
+import socket
+
+# found_eyetrackers = tr.find_all_eyetrackers()
+# my_eyetracker = found_eyetrackers[0]
+
+# vectorDict = {(0, 0): "Fly Up & Turn Left", (1, 0):"Fly Up & Turn Right", (0,1):"Fly Down & Turn Left", (1,1):"Fly Down & Turn Right", (0.5,0.5):"Do Nothing", (0.5,0):"Fly Up", (0.5,1):"Fly Down", (0, 0.5):"Turn Left", (1,0.5):"Turn Right"}
+
+# def myround(x, prec=1, base=.5):
+#   return round(base * round(float(x)/base),prec)
 
 
-found_eyetrackers = tr.find_all_eyetrackers()
-my_eyetracker = found_eyetrackers[0]
 
-vectorDict = {(0, 0): "Fly Up & Turn Left", (1, 0):"Fly Up & Turn Right", (0,1):"Fly Down & Turn Left", (1,1):"Fly Down & Turn Right", (0.5,0.5):"Do Nothing", (0.5,0):"Fly Up", (0.5,1):"Fly Down", (0, 0.5):"Turn Left", (1,0.5):"Turn Right"}
+# def collectData(communicator):
+#     global vectorDict
+#     # while True:
 
-def myround(x, prec=1, base=.5):
-  return round(base * round(float(x)/base),prec)
-
-
-
-def collectData(communicator):
-    global vectorDict
-    # while True:
-
-    #     xval = np.random.rand() + np.random.randint(0,1)
-    #     yval =  np.random.rand()
-    #     communicator.put([xval,yval]) # we use the Queue here to commuicate to the other process. Any process is
-    #     # allowed to put data into or extract data from. So the data collection process simply keeps putting data in.
-    #     time.sleep(0.4) # not to overload this example ;)
+#     #     xval = np.random.rand() + np.random.randint(0,1)
+#     #     yval =  np.random.rand()
+#     #     communicator.put([xval,yval]) # we use the Queue here to commuicate to the other process. Any process is
+#     #     # allowed to put data into or extract data from. So the data collection process simply keeps putting data in.
+#     #     time.sleep(0.4) # not to overload this example ;)
 
 
-    found_eyetrackers = tr.find_all_eyetrackers()
-    my_eyetracker = found_eyetrackers[0]
+#     found_eyetrackers = tr.find_all_eyetrackers()
+#     my_eyetracker = found_eyetrackers[0]
 
 
-    def gaze_data_callback(gaze_data):
-        x, y = gaze_data['right_gaze_point_on_display_area']
-        # print(x, y)
-        # time.sleep(1)
-        communicator.put(vectorDict[(myround(x), myround(y))])
+#     def gaze_data_callback(gaze_data):
+#         x, y = gaze_data['right_gaze_point_on_display_area']
+#         # print(x, y)
+#         # time.sleep(1)
+#         communicator.put(vectorDict[(myround(x), myround(y))])
 
 
-    my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
+#     my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
 
-    while True:
-        continue
-    # time.sleep(5)
+#     while True:
+#         continue
+#     # time.sleep(5)
 
-    # my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
+#     # my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
+
+
+def getData(cs):
+    cs.send("get data".encode())
+    data = cs.recv(1024).decode()  # receive response
+    print('Received from server: ' + data)  # show in terminal
+
+
 
 
 class Ctrl(Enum):
@@ -203,18 +211,29 @@ if __name__ == "__main__":
         drone.connect()
         control = KeyboardCtrl()
 
-        communicator = Queue()
-        print('Start process...')
-        eyeTrackerData = Process(target=collectData, args=(communicator,))
-        eyeTrackerData.start()
-        drone(TakeOff())
+        # communicator = Queue()
+        # print('Start process...')
+        # eyeTrackerData = Process(target=collectData, args=(communicator,))
+        # eyeTrackerData.start()
+        # drone(TakeOff())
+
+        host = "10.247.5.44"
+        port = 9123  # socket server port number
+
+        client_socket = socket.socket()  # instantiate
+        client_socket.connect((host, port))  # connect to the server
+
+        # message = input(" -> ")  # take input
+
 
         while not control.quit():
-            data = communicator.get()
+            data = getData(client_socket)
 
             if data == "Turn Left":
                 drone(moveBy(0,0,0,-0.261799))
             else:
                 drone(PCMD(0, 0, 0, 0, 0, timestampAndSeqNum=0))
             time.sleep(0.05)
+        client_socket.close()  # close the connection
+
 
