@@ -227,10 +227,16 @@ if __name__ == "__main__":
 
 
         while not control.quit():
-            data = getData(client_socket)
+            if control.takeoff():
+                drone(TakeOff())
+            elif control.landing():
+                drone(Landing())
+            if control.has_piloting_cmd():
 
-            if data == "Turn Left":
-                drone(moveBy(0,0,0,-0.261799))
+                data = getData(client_socket)
+
+                if data == "Turn Left":
+                    drone(moveBy(0,0,0,-0.261799))
             else:
                 drone(PCMD(0, 0, 0, 0, 0, timestampAndSeqNum=0))
             time.sleep(0.05)
