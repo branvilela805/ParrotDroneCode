@@ -89,8 +89,8 @@ if __name__ == '__main__':
             break
         # print("from connected user: " + str(data))
         if str(data) == "get data":
-            data = time.strftime("%H:%M:%S")
             data = currvalue
+            print(data)
             conn.send(data.encode())
         time.sleep(2)  # send data to the client
 
