@@ -11,6 +11,9 @@ from collections import defaultdict
 from enum import Enum
 import socket
 
+from olympe.messages.ardrone3.PilotingState import FlyingStateChanged
+from olympe.messages.ardrone3.Piloting import TakeOff, moveBy, Landing
+
 # found_eyetrackers = tr.find_all_eyetrackers()
 # my_eyetracker = found_eyetrackers[0]
 
@@ -56,6 +59,7 @@ def getData(cs):
     cs.send("get data".encode())
     data = cs.recv(1024).decode()  # receive response
     print('Received from server: ' + data)  # show in terminal
+    return str(data)
 
 
 
@@ -225,25 +229,38 @@ if __name__ == "__main__":
 
         # message = input(" -> ")  # take input
 
-
+        tookoff = False
         while not control.quit():
-            if control.takeoff():
-                drone(TakeOff())
-            elif control.landing():
-                drone(Landing())
-            # if control.has_piloting_cmd():
+            data = getData(client_socket)
+            if data == "Blinked" and not tookoff:
+                tookoff = True
+                drone(TakeOff() >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+            elif data == "Blinked" and tookoff:
+                drone(Landing() >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
 
-            #     data = getData(client_socket)
-
-            #     if data == "Turn Left":
-            #         drone(moveBy(0,0,0,-0.261799))
-            else:
-                data = getData(client_socket)
-
-                if data == "Turn Left":
-                    drone(moveBy(0,0,0,-0.261799))
-                # drone(PCMD(0, 0, 0, 0, 0, timestampAndSeqNum=0))
+            match data:
+                case "Turn Left":
+                    drone(moveBy(0,0,0,-0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Turn Right":
+                    drone(moveBy(0,0,0,0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Fly Up":
+                    drone(moveBy(0,0,-.25,0) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Fly Down":
+                    drone(moveBy(0,0,.25,0) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Fly Up & Turn Left":
+                    drone(moveBy(0,0,-.25,-0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Fly Up & Turn Right":
+                    drone(moveBy(0,0,-.25,0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()  
+                case "Fly Down & Turn Left":
+                    drone(moveBy(0,0,.25,-0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case "Fly Down & Turn Right":
+                    drone(moveBy(0,0,.25,0.261799) >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+                case _:
+                    drone(moveBy(0,0,0,0))                                                        
+            # if data == "Turn Left":
+            #     drone(moveBy(0,0,0,-0.261799) >> FlyingStateChanged(state="hovering", _timeout=5)).wait().success()
+            # if data == "Turn Right":
+            #     drone(moveBy(0,0,0,0.261799))
+            # drone(PCMD(0, 0, 0, 0, 0, timestampAndSeqNum=0))
             time.sleep(0.05)
         client_socket.close()  # close the connection
-
-

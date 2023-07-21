@@ -2,7 +2,7 @@ import socket
 import time
 from multiprocessing import Process, Queue
 import tobii_research as tr
-
+import math
 
 
 
@@ -14,6 +14,18 @@ import tobii_research as tr
 def myround(x, prec=1, base=.5):
   return round(base * round(float(x)/base),prec)
 
+global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
+
+blinked = False
+
+def blinkCheck():
+    global global_blink_arr
+    global_blink_arr = global_blink_arr[-120:]
+    if all(math.isnan(element) for element in global_blink_arr):
+        global_blink_arr.clear()
+        return True
+    else:
+        return False
 
 
 def collectData(communicator):
@@ -32,6 +44,8 @@ def collectData(communicator):
 
 
     def gaze_data_callback(gaze_data):
+
+
         x, y = gaze_data['right_gaze_point_on_display_area']
         # print(x, y)
         # time.sleep(1)
@@ -57,11 +71,17 @@ if __name__ == '__main__':
     vectorDict = {(0, 0): "Fly Up & Turn Left", (1, 0):"Fly Up & Turn Right", (0,1):"Fly Down & Turn Left", (1,1):"Fly Down & Turn Right", (0.5,0.5):"Do Nothing", (0.5,0):"Fly Up", (0.5,1):"Fly Down", (0, 0.5):"Turn Left", (1,0.5):"Turn Right"}
     currvalue = ""
     def gaze_data_callback(gaze_data):
+        global blinked
         global currvalue
-        x, y = gaze_data['right_gaze_point_on_display_area']
-        # print(x, y)
-        # time.sleep(1)
-        currvalue=vectorDict[(myround(x), myround(y))]
+        if not blinked:
+            global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
+            blinked = blinkCheck()
+            x, y = gaze_data['right_gaze_point_on_display_area']
+            currvalue=vectorDict[(myround(x), myround(y))]
+        else:
+            currvalue="Blinked"
+            blinked=False
+
     my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
     # get the hostname
     host = socket.gethostname()
@@ -92,7 +112,7 @@ if __name__ == '__main__':
             data = currvalue
             print(data)
             conn.send(data.encode())
-        time.sleep(2)  # send data to the client
+        # time.sleep(2)  # send data to the client
 
     conn.close()  # close the connection
 
