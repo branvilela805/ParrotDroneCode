@@ -18,11 +18,13 @@ global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
 
 blinked = False
 
+s = ""
+
 def blinkCheck():
     global global_blink_arr
     global_blink_arr = global_blink_arr[-120:]
     if all(math.isnan(element) for element in global_blink_arr):
-        global_blink_arr.clear()
+        global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
         return True
     else:
         return False
@@ -73,14 +75,49 @@ if __name__ == '__main__':
     def gaze_data_callback(gaze_data):
         global blinked
         global currvalue
+        global s
         if not blinked:
             global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
             blinked = blinkCheck()
             x, y = gaze_data['right_gaze_point_on_display_area']
             currvalue=vectorDict[(myround(x), myround(y))]
+
+            data = gaze_data['left_gaze_origin_in_trackbox_coordinate_system']
+            # pprint(gaze_data["left_gaze_origin_validity"])
+            
+            if gaze_data["left_gaze_origin_validity"] == 1:
+
+                s = ""
+
+                x = data[0]
+
+                # print(x)
+
+                if x >= .66:
+                    s += " Move Left "
+
+                elif x <= .56:
+                    s += " Move Right "
+                
+                else:
+                    pass
+                    # print("Nothing")
+
+                z = data[2]
+
+                if z > 0.5:
+                    s += " Move Backward "
+                elif z < 0.4:
+                    s+=" Move Forward "
+                else:
+                    pass
+                    # s+= " do nothing"
+
         else:
             currvalue="Blinked"
             blinked=False
+
+
 
     my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
     # get the hostname
@@ -109,7 +146,7 @@ if __name__ == '__main__':
             break
         # print("from connected user: " + str(data))
         if str(data) == "get data":
-            data = currvalue
+            data = currvalue + s
             print(data)
             conn.send(data.encode())
         # time.sleep(2)  # send data to the client

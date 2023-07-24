@@ -14,7 +14,7 @@ def blinkCheck():
     global global_blink_arr
     global_blink_arr = global_blink_arr[-120:]
     if all(math.isnan(element) for element in global_blink_arr):
-        global_blink_arr.clear()
+        global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
         return True
     else:
         return False
@@ -26,6 +26,7 @@ def gaze_data_callback(gaze_data):
     if not blinked:
         global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
         blinked = blinkCheck()
+        print("Do Nothing")
     else:
         print("BLINKED")
         blinked=False

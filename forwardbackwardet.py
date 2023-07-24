@@ -13,27 +13,32 @@ def gaze_data_callback(gaze_data):
     
     if gaze_data["left_gaze_origin_validity"] == 1:
 
-        # x = data[0]
+        s = ""
 
-        # # print(x)
+        x = data[0]
 
-        # if x >= .66:
-        #     print("Move Left")
+        # print(x)
 
-        # elif x <= .33:
-        #     print("Move Right")
+        if x >= .66:
+            s += " Move Left"
+
+        elif x <= .56:
+            s += " Move Right"
         
-        # else:
-        #     print("Nothing")
+        else:
+            pass
+            # print("Nothing")
 
         z = data[2]
 
         if z > 0.5:
-            print("backwards")
+            s += " backwards"
         elif z < 0.4:
-            print("Forwards")
+            s+=" Forwards"
         else:
-            print("do nothing")
+            pass
+            # s+= " do nothing"
+        print(s)
 
 
 
