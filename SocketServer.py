@@ -15,8 +15,10 @@ def myround(x, prec=1, base=.5):
   return round(base * round(float(x)/base),prec)
 
 global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
+global_land_arr = [1,1,1,1,1,1,1,1,1,1]
 
 blinked = False
+landing = False
 
 s = ""
 
@@ -25,10 +27,18 @@ def blinkCheck():
     global_blink_arr = global_blink_arr[-120:]
     if all(math.isnan(element) for element in global_blink_arr):
         global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
-        return True
+        return " Blinked "
     else:
-        return False
+        return ""
 
+def landCheck():
+    global global_land_arr
+    global_land_arr = global_land_arr[-120:]
+    if all(math.isnan(element) for element in global_land_arr):
+        global_land_arr = [1,1,1,1,1,1,1,1,1,1]
+        return " Land "
+    else:
+        return ""
 
 def collectData(communicator):
     global vectorDict
@@ -76,46 +86,47 @@ if __name__ == '__main__':
         global blinked
         global currvalue
         global s
-        if not blinked:
-            global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
-            blinked = blinkCheck()
-            x, y = gaze_data['right_gaze_point_on_display_area']
-            currvalue=vectorDict[(myround(x), myround(y))]
+        global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
+        x, y = gaze_data['right_gaze_point_on_display_area']
+        currvalue=vectorDict[(myround(x), myround(y))]
 
-            data = gaze_data['left_gaze_origin_in_trackbox_coordinate_system']
-            # pprint(gaze_data["left_gaze_origin_validity"])
+        data = gaze_data['left_gaze_origin_in_trackbox_coordinate_system']
+        # pprint(gaze_data["left_gaze_origin_validity"])
+        
+        if gaze_data["left_gaze_origin_validity"] == 1:
+
+            s = ""
+
+            x = data[0]
+
+            # print(x)
+
+            if x >= .66:
+                s += " Move Left "
+
+            elif x <= .56:
+                s += " Move Right "
             
-            if gaze_data["left_gaze_origin_validity"] == 1:
+            else:
+                pass
+                # print("Nothing")
 
-                s = ""
+            z = data[2]
 
-                x = data[0]
-
-                # print(x)
-
-                if x >= .66:
-                    s += " Move Left "
-
-                elif x <= .56:
-                    s += " Move Right "
-                
-                else:
-                    pass
-                    # print("Nothing")
-
-                z = data[2]
-
-                if z > 0.5:
-                    s += " Move Backward "
-                elif z < 0.4:
-                    s+=" Move Forward "
-                else:
-                    pass
-                    # s+= " do nothing"
-
-        else:
-            currvalue="Blinked"
-            blinked=False
+            if z > 0.5:
+                s += " Move Backward "
+            elif z < 0.4:
+                s+=" Move Forward "
+            else:
+                pass
+                # s+= " do nothing"
+        blinked = blinkCheck()
+        if "Blinked" in blinked:
+            landing = landCheck()
+            if landing != "":
+                currvalue += landing
+            else:
+                currvalue += blinked
 
 
 

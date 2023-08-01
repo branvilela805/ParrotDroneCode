@@ -27,7 +27,6 @@ def getData(cs):
 if __name__ == "__main__":
     with olympe.Drone("10.202.0.1") as drone:
         drone.connect()
-        control = KeyboardCtrl()
 
         # communicator = Queue()
         # print('Start process...')
@@ -46,7 +45,7 @@ if __name__ == "__main__":
         tookoff = False
         alreadyBlinked = False
         f = False
-        while not control.quit():
+        while True:
 
             # if not f:
             #     f = True
@@ -55,10 +54,14 @@ if __name__ == "__main__":
 
 
             data = getData(client_socket)
-            if data == "Blinked" and not tookoff:
+            if "Blinked" in data and not tookoff:
                 tookoff = True
                 alreadyBlinked = True
                 drone(TakeOff() >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
+            if "Land" in data and tookoff:
+                tookoff = False
+                alreadyBlinked = True
+                drone(Landing()).wait().success()
             # elif data == "Blinked" and tookoff:
             #     drone(Landing() >> FlyingStateChanged(state="hovering", _timeout=.1)).wait().success()
 
