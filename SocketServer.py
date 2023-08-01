@@ -18,7 +18,6 @@ global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
 global_land_arr = [1,1,1,1,1,1,1,1,1,1]
 
 blinked = False
-landing = False
 
 s = ""
 
@@ -27,9 +26,9 @@ def blinkCheck():
     global_blink_arr = global_blink_arr[-120:]
     if all(math.isnan(element) for element in global_blink_arr):
         global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
-        return " Blinked "
+        return True
     else:
-        return ""
+        return False
 
 def landCheck():
     global global_land_arr
@@ -39,38 +38,6 @@ def landCheck():
         return " Land "
     else:
         return ""
-
-def collectData(communicator):
-    global vectorDict
-    # while True:
-
-    #     xval = np.random.rand() + np.random.randint(0,1)
-    #     yval =  np.random.rand()
-    #     communicator.put([xval,yval]) # we use the Queue here to commuicate to the other process. Any process is
-    #     # allowed to put data into or extract data from. So the data collection process simply keeps putting data in.
-    #     time.sleep(0.4) # not to overload this example ;)
-
-
-    found_eyetrackers = tr.find_all_eyetrackers()
-    my_eyetracker = found_eyetrackers[0]
-
-
-    def gaze_data_callback(gaze_data):
-
-
-        x, y = gaze_data['right_gaze_point_on_display_area']
-        # print(x, y)
-        # time.sleep(1)
-        communicator.put(vectorDict[(myround(x), myround(y))])
-
-
-    my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
-
-    while True:
-        continue
-    # time.sleep(5)
-
-    # my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
 
 
 
@@ -86,47 +53,51 @@ if __name__ == '__main__':
         global blinked
         global currvalue
         global s
-        global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
-        x, y = gaze_data['right_gaze_point_on_display_area']
-        currvalue=vectorDict[(myround(x), myround(y))]
+        if not blinked:
+            global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
+            global_land_arr.append(gaze_data["left_gaze_point_on_display_area"][0])
+            blinked = blinkCheck()
+            x, y = gaze_data['right_gaze_point_on_display_area']
+            currvalue=vectorDict[(myround(x), myround(y))]
 
-        data = gaze_data['left_gaze_origin_in_trackbox_coordinate_system']
-        # pprint(gaze_data["left_gaze_origin_validity"])
-        
-        if gaze_data["left_gaze_origin_validity"] == 1:
-
-            s = ""
-
-            x = data[0]
-
-            # print(x)
-
-            if x >= .66:
-                s += " Move Left "
-
-            elif x <= .56:
-                s += " Move Right "
+            data = gaze_data['left_gaze_origin_in_trackbox_coordinate_system']
+            # pprint(gaze_data["left_gaze_origin_validity"])
             
-            else:
-                pass
-                # print("Nothing")
+            if gaze_data["left_gaze_origin_validity"] == 1:
 
-            z = data[2]
+                s = ""
 
-            if z > 0.5:
-                s += " Move Backward "
-            elif z < 0.4:
-                s+=" Move Forward "
-            else:
-                pass
-                # s+= " do nothing"
-        blinked = blinkCheck()
-        if "Blinked" in blinked:
+                x = data[0]
+
+                # print(x)
+
+                if x >= .66:
+                    s += " Move Left "
+
+                elif x <= .56:
+                    s += " Move Right "
+                
+                else:
+                    pass
+                    # print("Nothing")
+
+                z = data[2]
+
+                if z > 0.5:
+                    s += " Move Backward "
+                elif z < 0.4:
+                    s+=" Move Forward "
+                else:
+                    pass
+                    # s+= " do nothing"
+
+        else:
             landing = landCheck()
             if landing != "":
-                currvalue += landing
+                currvalue = landing
             else:
-                currvalue += blinked
+                currvalue="Blinked"
+            blinked=False
 
 
 
