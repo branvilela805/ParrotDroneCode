@@ -24,7 +24,7 @@ s = ""
 
 def landCheck():
     global global_land_arr
-    global_land_arr = global_land_arr[-120:]
+    global_land_arr = global_land_arr[-10:]
     if all(math.isnan(element) for element in global_land_arr):
         global_land_arr = [1,1,1,1,1,1,1,1,1,1]
         return "Land"
@@ -33,7 +33,7 @@ def landCheck():
 
 def blinkCheck():
     global global_blink_arr
-    global_blink_arr = global_blink_arr[-120:]
+    global_blink_arr = global_blink_arr[-10:]
     if all(math.isnan(element) for element in global_blink_arr):
         global_blink_arr = [1,1,1,1,1,1,1,1,1,1]
         return "Blinked"
@@ -58,6 +58,7 @@ if __name__ == '__main__':
         global currvalue
         global s
         # if not blinked:
+        currvalue = ""
         global_blink_arr.append(gaze_data["right_gaze_point_on_display_area"][0])
         global_land_arr.append(gaze_data["left_gaze_point_on_display_area"][0])
         gesture = ""

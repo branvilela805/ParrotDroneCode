@@ -25,7 +25,7 @@ def getData(cs):
 
 
 if __name__ == "__main__":
-    with olympe.Drone("10.202.0.1") as drone:
+    with olympe.Drone("192.168.42.1") as drone:
         drone.connect()
 
         # communicator = Queue()
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         # eyeTrackerData.start()
         # drone(TakeOff())
 
-        host = "10.247.5.44"
+        host = "10.42.0.63"
         port = 9123  # socket server port number
 
         client_socket = socket.socket()  # instantiate
@@ -71,8 +71,10 @@ if __name__ == "__main__":
             z = 0
             r = 0
 
-            movementConst = 0.25
-            turningConst = 0.261799
+            movementConst = 0.35
+            turningConst = 0.349066
+
+            verticalMovementConst = 0.25
 
             if "Turn Left" in data:
                 r = -turningConst
@@ -80,9 +82,9 @@ if __name__ == "__main__":
                 r = turningConst
             
             if "Fly Up" in data:
-                z = -movementConst
+                z = -verticalMovementConst
             elif "Fly Down" in data:
-                z = movementConst
+                z = verticalMovementConst
             
             if "Move Left" in data:
                 y = -movementConst
